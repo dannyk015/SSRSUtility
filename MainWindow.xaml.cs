@@ -268,7 +268,7 @@ namespace SSRSUtility
 
             string tablixName = "test";
             string datasetName = "PortfolioOverview";
-            string subReport = "somereport";
+            string subReport = "PortfolioOverviewSubreport";
 
             d.CreateParentReport(tablixName, datasetName, subReport);
             
