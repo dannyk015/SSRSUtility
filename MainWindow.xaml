@@ -1,0 +1,86 @@
+﻿<Window x:Class="SSRSUtility.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SSRS UTILITY" Height="525" Width="525"
+		Background="#ffffff"
+		Foreground="#487FA6"
+		FontFamily="Segoe UI"
+		FontSize="13" Icon="dumpling1.ico" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen">
+
+	<Grid Margin="5">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+		<TextBlock Text="Select a product version: " Margin="5,10,0,0"/>
+		<ComboBox Grid.Column="1" Style="{DynamicResource SSRSComboBoxStyle}" Margin="5">
+            <ComboBoxItem x:Name="rd30U2">APX 3.0 Update 2</ComboBoxItem>
+			<ComboBoxItem x:Name="rd30U3">APX 3.0 Update 3</ComboBoxItem>
+			<ComboBoxItem x:Name="rd401">APX 4.0.1</ComboBoxItem>
+            <ComboBoxItem x:Name="rd41" IsSelected="True">APX 4+</ComboBoxItem>
+		</ComboBox>
+		<TextBlock Text="Report Parameters" Grid.Row="1" Grid.ColumnSpan="2" Margin="5,16,0,0" />
+		<GroupBox Header="Holdings" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Top" Margin="5">
+			<ScrollViewer Height="100" >
+				<ListBox>
+					<ListBoxItem><CheckBox x:Name="chkAccruedInterest">Accrued Interest</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkBondCostBasis">Bond Cost Basis</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkIncludeCapitalGains">Include Capital Gains</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkMFBasisIncludeReinvest">Mutual Fund Cost Basis</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkClassification">Reporting Classification</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkMBSFace">MBS Face</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkTIPSFace">TIPS Face</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkPriceType">Price Set</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkIndustrySector">Show Industry Group</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkIndustryGroup">Show Industry Sector</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkShowSymbol">Show Security Symbol</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkShowTaxLots">Show Tax Lots</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkUseSettlementDate">Use Settlement Date</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkYieldOption">Yield</CheckBox></ListBoxItem>
+				</ListBox>
+			</ScrollViewer>
+		</GroupBox>
+		<GroupBox Grid.Column="2" Header="Performance" HorizontalAlignment="Stretch" Grid.Row="2" VerticalAlignment="Top" Margin="5">
+			<ScrollViewer Height="100" >
+				<ListBox>
+					<ListBoxItem><CheckBox x:Name="chkAccruePerfFees">Accrue Perf Fees</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkAllocatePerfFees">Allocate Perf Fees</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkAnnualizeReturns">Annualize Returns</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkFeeMethod">Fee Method</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkPerformanceClassification">Performance Classification</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkUseIRR">Show IRR Calc</CheckBox></ListBoxItem>
+					<ListBoxItem><CheckBox x:Name="chkUseACB">Use ACB</CheckBox></ListBoxItem>
+				</ListBox>
+			</ScrollViewer>
+		</GroupBox>
+		<TextBlock Text="Accounting Functions" Grid.Row="3" Grid.ColumnSpan="2" Margin="5,16,0,0" />
+		<StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="5">
+			<CheckBox x:Name="chkAppraisal" Margin="5,0,5,0">Appraisal</CheckBox>
+			<CheckBox x:Name="chkIncludePerformance" Margin="5,0,5,0">Performance</CheckBox>
+			<CheckBox x:Name="chkPerfHistory" Margin="5,0,5,0">Performance History</CheckBox>
+		</StackPanel>
+
+		<TextBlock Text="Report Directory" Grid.Row="5" Margin="5,16,0,0" />
+        <TextBox Foreground="#FF747474" x:Name="txtRdlFolder" TextChanged="txtRdlFolder_TextChanged" Grid.Row="6" Margin="5,0,5,0" Padding="5"></TextBox>
+        <Button Click="btnSelectFolder_Click" x:Name="btnNewRdlFolderBrowse" Margin="5,0,0,0" Grid.Row="6" Grid.Column="1" Padding="10,0,10,0" Width="Auto" HorizontalAlignment="Left" Style="{DynamicResource SSRSButtonStyle}">...</Button>
+
+		<TextBlock Text="File Name" Grid.Row="7" Margin="5,16,0,0" />
+        <TextBox Foreground="#FF747474" x:Name="txtFileName" Grid.Row="8" Margin="5,0,5,0" Padding="5">NewReport.rdl</TextBox>
+		<StackPanel Grid.Row="9" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center">
+			<Button Click="CreateBaseFile" x:Name="btnCreateFile" Style="{DynamicResource SSRSButtonStyle}" Margin="32" Padding="15,5,15,5">CREATE</Button>
+            <Button Click="button1_Click" x:Name="btnConvertFile" Style="{DynamicResource SSRSButtonStyle}" Margin="32" Padding="15,5,15,5">CONVERT</Button>
+		</StackPanel>
+	</Grid>
+</Window>
