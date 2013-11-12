@@ -4,7 +4,7 @@
         Title="SSRS UTILITY" Height="425" Width="525"
 		Background="#ffffff"
 		Foreground="#487FA6"
-		FontFamily="Segoe UI"
+		FontFamily="Calibri"
 		FontSize="13" Icon="dumpling1.ico" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen">
 
 	<Grid Margin="5">
