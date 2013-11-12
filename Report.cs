@@ -116,7 +116,7 @@ namespace SSRSUtility
             XmlElement color = AppendElement(Style, "Color", "White");
             return Value;
         }
-        public void CreateParentReport(string tablixName, string datasetName, string subReportName)
+        public void CreateParentReport(string tablixName, string datasetName, string subReportName, bool IsSingleDateReport)
         {
             XmlElement Body = GetChildElement(Document, "Body");
             XmlElement ReportItems = GetChildElement(Body, "ReportItems");
@@ -158,10 +158,24 @@ namespace SSRSUtility
             AddTextboxContent(reportHeading3, "=Variables!Heading3.Value");
 
             XmlElement reportingCurrency = CreateReportElement(cellContents4, "Textbox", "ReportingCurrency");
-            AddTextboxContent(reportingCurrency, "=iif(Parameters!FeeMethod.Value = 1, \"Net of \", \"Gross of \") + iif(CBool(Parameters!AccruePerfFees.Value) and Parameters!FeeMethod.Value = 1,\"Accrued \",nothing) + \"Fees | \"+ Fields!ReportingCurrencyName.Value");
+            if (IsSingleDateReport)
+            {
+                AddTextboxContent(reportingCurrency, "Fields!ReportingCurrencyName.Value");
+            }
+            else
+            {
+                AddTextboxContent(reportingCurrency, "=iif(Parameters!FeeMethod.Value = 1, \"Net of \", \"Gross of \") + iif(CBool(Parameters!AccruePerfFees.Value) and Parameters!FeeMethod.Value = 1,\"Accrued \",nothing) + \"Fees | \"+ Fields!ReportingCurrencyName.Value");
+            }
 
             XmlElement reportDate = CreateReportElement(cellContents5, "Textbox", "ReportDate");
-            AddTextboxContent(reportDate, "=Convert.ToDateTime(Fields!FromDate.Value).ToString(\"d\", Globalization.CultureInfo.GetCultureInfo(Fields!LocaleID.Value)) + \" - \" + Convert.ToDateTime(Fields!ThruDate.Value).ToString(\"d\", Globalization.CultureInfo.GetCultureInfo(Fields!LocaleID.Value))");
+            if (IsSingleDateReport)
+            {
+                AddTextboxContent(reportDate, "Convert.ToDateTime(Fields!ThruDate.Value).ToString(\"d\", Globalization.CultureInfo.GetCultureInfo(Fields!LocaleID.Value))");
+            }
+            else
+            {
+                AddTextboxContent(reportDate, "=Convert.ToDateTime(Fields!FromDate.Value).ToString(\"d\", Globalization.CultureInfo.GetCultureInfo(Fields!LocaleID.Value)) + \" - \" + Convert.ToDateTime(Fields!ThruDate.Value).ToString(\"d\", Globalization.CultureInfo.GetCultureInfo(Fields!LocaleID.Value))");
+            }
 
             XmlElement firmLogo = CreateReportElement(cellContents6, "Textbox", "FirmLogo");
             AddTextboxContent(firmLogo, "=Fields!FirmLogo.Value");
@@ -222,7 +236,120 @@ namespace SSRSUtility
             AppendElement(TablixStyle, "Color", "=Code.StyleSheetValue(\"DetailColor\")");
 
             SetHeaderFooter();
+        }
+        public void CreateParentDataSet(string datasetName, bool doPerf, bool doPerfHist, bool doPerfHistDetail, bool doPerfHistPeriod, bool doGainLoss, bool doTransactions)
+        {
+            string query = "exec APXUser.pSessionInfoSetGuid @SessionGuid = @SessionGuid";
+            query += "\n     declare @DataHandle uniqueidentifier = newid()";
+            query += "\n     exec APXUser.pAppraisalBatch @DataHandle = @DataHandle,@DataName = 'Appraisal',@Portfolios = @Portfolios,@Date = @ToDate";
+            query += "\n     ,@ReportingCurrencyCode = @ReportingCurrencyCode out";
+            //query +="\n     ,@CompositeFromDate = @CompositeFromDate";
+            //query +="\n     ,@CompositeToDate = @CompositeToDate";
+            //query +="\n     ,@FiscalYearStartDate = @FiscalYearStartDate";
+            query += "\n     ,@IncludeClosedPortfolios = @IncludeClosedPortfolios";
+            query += "\n     ,@IncludeUnsupervisedAssets = @IncludeUnsupervisedAssets";
+            query += "\n     ,@ShowTaxLotsLumped = @ShowTaxLotsLumped out";
+            query += "\n     ,@AccruedInterestID = @AccruedInterestID";
+            query += "\n     ,@YieldOptionID = @YieldOptionID out";
+            query += "\n     ,@BondCostBasisID  = @BondCostBasisID out";
+            query += "\n     ,@MFBasisIncludeReinvest = @MFBasisIncludeReinvest out";
+            query += "\n     ,@UseSettlementDate = @UseSettlementDate out";
+            query += "\n     ,@ShowCurrentMBSFace  = @ShowCurrentMBSFace out";
+            query += "\n     ,@ShowCurrentTIPSFace  = @ShowCurrentTIPSFace out";
+            query += "\n     ,@LocaleID = @LocaleID";
+            query += "\n     ,@PriceTypeID = @PriceTypeID";
+            query += "\n     ,@OverridePortfolioSettings = @OverridePortfolioSettings \n\n";
 
+            if (doPerf)
+            {
+                query += "      exec APXUser.pPerformanceBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @ClassificationID = @ClassificationID, @ReportingCurrencyCode = @ReportingCurrencyCode out";
+                query += "\n     ,@FeeMethod = @FeeMethod, @UseACB = @UseACB out, @AccruePerfFees = @AccruePerfFees out, @AllocatePerfFees = @AllocatePerfFees out";
+                query += "\n     ,@AnnualizeReturns = @AnnualizeReturns, @UseIRRCalc = @UseIRRCalc, @InceptionToDate = @InceptionToDate, @OverridePortfolioSettings = @OverridePortfolioSettings";
+                query += "\n     ,@AccruedInterestID = @AccruedInterestID, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+
+            if (doPerfHist)
+            {
+                query += "\n      exec APXUser.pPerformanceHistoryBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @ClassificationID = @ClassificationID, @ReportingCurrencyCode = @ReportingCurrencyCode out";
+                query += "\n     ,@FeeMethod = @FeeMethod, @UseACB = @UseACB out, @AccruePerfFees = @AccruePerfFees out, @AllocatePerfFees = @AllocatePerfFees out";
+                query += "\n     ,@AnnualizeReturns = @AnnualizeReturns, @UseIRRCalc = @UseIRRCalc, @InceptionToDate = @InceptionToDate, @OverridePortfolioSettings = @OverridePortfolioSettings";
+                query += "\n     ,@AccruedInterestID = @AccruedInterestID, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+
+            if (doPerfHistDetail)
+            {
+                query += "\n      exec APXUser.pPerformanceHistoryDetailBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @ClassificationID = @ClassificationID, @ReportingCurrencyCode = @ReportingCurrencyCode out";
+                query += "\n     ,@FeeMethod = @FeeMethod, @UseACB = @UseACB out, @AccruePerfFees = @AccruePerfFees out, @AllocatePerfFees = @AllocatePerfFees out";
+                query += "\n     ,@AnnualizeReturns = @AnnualizeReturns, @UseIRRCalc = @UseIRRCalc, @InceptionToDate = @InceptionToDate, @OverridePortfolioSettings = @OverridePortfolioSettings";
+                query += "\n     ,@AccruedInterestID = @AccruedInterestID, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+
+            if (doPerfHistPeriod)
+            {
+                query += "\n      exec APXUser.pPerformanceHistoryPeriodBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @ClassificationID = @ClassificationID, @ReportingCurrencyCode = @ReportingCurrencyCode out";
+                query += "\n     ,@FeeMethod = @FeeMethod, @UseACB = @UseACB out, @AccruePerfFees = @AccruePerfFees out, @AllocatePerfFees = @AllocatePerfFees out";
+                query += "\n     ,@AnnualizeReturns = @AnnualizeReturns, @UseIRRCalc = @UseIRRCalc, @InceptionToDate = @InceptionToDate, @OverridePortfolioSettings = @OverridePortfolioSettings";
+                query += "\n     ,@AccruedInterestID = @AccruedInterestID, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+
+            if (doGainLoss)
+            {
+                query += "\n      exec APXUser.pRealizedGainLossBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @IncludeCapitalGains = @IncludeCapitalGains, @Separate5YearGains = @Separate5YearGains, @ReportingCurrencyCode = @ReportingCurrencyCode out";
+                query += "\n     ,@IncludeUnsupervisedAssets = @IncludeUnsupervisedAssets, @TurnOffCloseDateProcessing = @TurnOffCloseDateProcessing, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+
+            if (doTransactions)
+            {
+                query += "\n      exec APXUser.pTransactionActivityBatch @DataHandle = @DataHandle,@DataName = 'Performance',@Portfolios = @Portfolios";
+                query += "\n     ,@FromDate = @FromDate, @ToDate = @ToDate, @ReportingCurrencyCode = @ReportingCurrencyCode out, @UseSettlementDate = @UseSettlementDate out";
+                query += "\n     ,@IncludeUnsupervisedAssets = @IncludeUnsupervisedAssets, @TurnOffCloseDateProcessing = @TurnOffCloseDateProcessing, @PriceTypeID = @PriceTypeID, @LocaleID = @LocaleID \n\n";
+            }
+            query += "\n     exec APXUser.pReportBatchExecute @DataHandle, @ExplodeData= 1";
+            query += "\n     declare @ReportData varbinary(max)";
+            query += "\n     exec APXUser.pReportDataGetFromHandle @DataHandle = @DataHandle, @DataName = 'Appraisal', @ReportData = @ReportData out";
+            query += "\n     select DataHandle = @DataHandle, FirmLogo = APX.fPortfolioCustomLabel(a.PortfolioBaseID, '$flogo', 'logo.jpg'), p.LocaleID, p.PrefixedPortfolioBaseCode, a.PortfolioBaseID, a.PortfolioBaseIDOrder, a.ReportDate, p.ReportHeading1,";
+            query += "\n     p.ReportHeading2, p.ReportHeading3, p.ReportingCurrencyCode, p.ReportingCurrencyName, UseSettlementDate = @UseSettlementDate from APXUser.fReportDataIndex(@ReportData) a";
+            query += "\n     join APXSSRS.fPortfolioBase(@LocaleID, @ReportingCurrencyCode, 0) p on p.PortfolioBaseID = a.PortfolioBaseID";
+            query += "\n     order by a.PortfolioBaseIDOrder \n\n";
+
+            XmlElement subReportDataSet = CreateDataSet(datasetName);
+            XmlElement Query = GetChildElement(subReportDataSet, "Query");
+            GetChildElement(Query, "CommandText").InnerText = query;
+            
+            CreateDataSetParameter(subReportDataSet, "SessionGuid", "String");
+            CreateDataSetParameter(subReportDataSet, "Portfolios", "String");
+            if (doGainLoss || doPerf || doPerfHist || doPerfHistDetail || doPerfHistPeriod || doTransactions)
+            {
+                CreateDataSetParameter(subReportDataSet, "FromDate", "DateTime");
+                CreateDataSetParameter(subReportDataSet, "ToDate", "DateTime");
+            }
+            else
+            {
+                CreateDataSetParameter(subReportDataSet, "Date", "DateTime");
+            }
+
+            CreateDataSetParameter(subReportDataSet, "ReportingCurrencyCode", "String");
+
+            CreateDataSetField(subReportDataSet, "DataHandle", "System.String");
+            CreateDataSetField(subReportDataSet, "FirmLogo", "System.String");
+            CreateDataSetField(subReportDataSet, "FromDate", "System.DateTime");
+            CreateDataSetField(subReportDataSet, "LocaleID", "System.Int16");
+            CreateDataSetField(subReportDataSet, "PrefixedPortfolioBaseCode", "System.String");
+            CreateDataSetField(subReportDataSet, "PortfolioBaseID", "System.Int16");
+            CreateDataSetField(subReportDataSet, "PortfolioBaseIDOrder", "System.int32");
+            CreateDataSetField(subReportDataSet, "ReportDate", "System.DateTime");
+            CreateDataSetField(subReportDataSet, "ReportHeading1", "System.String");
+            CreateDataSetField(subReportDataSet, "ReportHeading2", "System.String");
+            CreateDataSetField(subReportDataSet, "ReportHeading3", "System.String");
+            CreateDataSetField(subReportDataSet, "ThruDate", "System.DateTime");
+            CreateDataSetField(subReportDataSet, "ReportingCurrencyCode", "System.String");
+            CreateDataSetField(subReportDataSet, "ReportingCurrencyName", "System.String");
+            CreateDataSetField(subReportDataSet, "UseSettlementDate", "System.Int32");
         }
         public void SetPageLayout(decimal heightInches, decimal widthInches, decimal LeftmarginInches, decimal RightmarginInches, decimal TopmarginInches, decimal BottommarginInches)
         {
@@ -379,7 +506,7 @@ namespace SSRSUtility
             AppendElement(reportParagraphStyle, "TextAlign", "Right");
             XmlElement reportTitleTextRuns = GetChildElement(reportTitleParagraph, "TextRuns");
             XmlElement reportTitleTextRun = GetChildElement(reportTitleTextRuns, "TextRun");
-            AppendElement(reportTitleTextRun, "Value", "=Parameters!ReportTitle.Value &amp; Code.GetSettlement(ReportItems!SettledTrades.Value)");
+            AppendElement(reportTitleTextRun, "Value", "=Parameters!ReportTitle.Value & Code.GetSettlement(ReportItems!SettledTrades.Value)");
             XmlElement reportTitleTextRunStyle = GetChildElement(reportTitleTextRun, "Style");
             AppendElement(reportTitleTextRunStyle, "FontStyle", "=Code.StyleSheetValue(\"ReportTitleStyle\")");
             AppendElement(reportTitleTextRunStyle, "FontFamily", "=Code.StyleSheetValue(\"ReportTitleFamily\")");
@@ -1220,7 +1347,7 @@ namespace SSRSUtility
             try
             {
                 d.Normalize();
-                d.Validate(new System.Xml.Schema.ValidationEventHandler(ValidateXml));
+                //d.Validate(new System.Xml.Schema.ValidationEventHandler(ValidateXml));
                 d.Save(filepath);
             }
             catch (Exception ex)

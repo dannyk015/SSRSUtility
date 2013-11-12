@@ -260,53 +260,56 @@ namespace SSRSUtility
             this.Cursor = System.Windows.Input.Cursors.Wait;
             Report d = new Report();
 
-            bool IsSingleDateReport = false;
-            if (chkAppraisal.IsChecked.Value)
+            bool IsSingleDateReport = true;
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value || chkRealizedGain.IsChecked.Value || chkTrans.IsChecked.Value)
             {
-                IsSingleDateReport = true;
+                IsSingleDateReport = false;
             }
 
             string tablixName = "test";
-            string datasetName = "PortfolioOverview";
+            string datasetName = "ReportPortfolios";
             string subReport = "PortfolioOverviewSubreport";
 
-            d.CreateParentReport(tablixName, datasetName, subReport);
-            
+            d.CreateParentReport(tablixName, datasetName, subReport, IsSingleDateReport);
+            d.CreateParentDataSet(datasetName, chkIncludePerformance.IsChecked.Value, chkPerfHistory.IsChecked.Value, chkPerfHistDetail.IsChecked.Value, chkPerfHistPeriod.IsChecked.Value, chkRealizedGain.IsChecked.Value, chkTrans.IsChecked.Value);
+
             d.CreateReportParameter("Portfolios", "String");
+            XmlElement reportTitle = d.CreateReportParameter("ReportTitle", "String", true, true, true);
+            d.AddReportParameterDefault(reportTitle, txtFileName.Text);
 
             //if (chkAppraisal.IsChecked.Value || chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkRealizedGain.IsChecked.Value || chkTrans.IsChecked.Value)
-            if (chkAppraisal.IsChecked.Value || chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value)
+            if (IsSingleDateReport)
             {
-                switch (IsSingleDateReport)
-                {
-                    case false:
-                        d.CreateReportParameter("FromDate", "DateTime", "From Date");
-                        d.CreateReportParameter("ToDate", "DateTime", "To Date");
-                        break;
-                    default:
-                        d.CreateReportParameter("Date", "DateTime");
-                        break;
-                }
+                d.CreateReportParameter("ToDate", "DateTime");
+            }
+            else
+            {
+                d.CreateReportParameter("FromDate", "DateTime", "From Date");
+                d.CreateReportParameter("ToDate", "DateTime", "To Date");
             }
 
-            if (chkAccruedInterest.IsChecked.Value)
+            //if (chkAccruedInterest.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value || chkIncludePerformance.IsChecked.Value)
             {
                 d.CreateDataSet_AccruedInterest();
                 XmlElement AccruedInterest = d.CreateReportParameter("AccruedInterestID", "Integer", "Accrued Interest");
                 d.AddReportParameterDefault(AccruedInterest, "Configuration", "AccruedInterestID");
                 d.AddReportParameterAvailableValues(AccruedInterest, "AccruedInterest", "AccruedInterestName", "AccruedInterestID");
             }
-            if (chkAccruePerfFees.IsChecked.Value)
+            //if (chkAccruePerfFees.IsChecked.Value)
+            //d.CreateParentDataSet(datasetName, chkIncludePerformance.IsChecked.Value, chkPerfHistory.IsChecked.Value, chkPerfHistDetail.IsChecked.Value, chkPerfHistPeriod.IsChecked.Value, chkRealizedGain.IsChecked.Value, chkTrans.IsChecked.Value);
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 XmlElement AccruePerfFees = d.CreateReportParameter("AccruePerfFees", "Boolean", "Accrue Fees");
                 d.AddReportParameterDefault(AccruePerfFees, "Configuration", "AccruePerfFees");
             }
-            if (chkAllocatePerfFees.IsChecked.Value)
+            //if (chkAllocatePerfFees.IsChecked.Value)
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 XmlElement AllocatePerfFees = d.CreateReportParameter("AllocatePerfFees", "Boolean", "Allocate Fees");
                 d.AddReportParameterDefault(AllocatePerfFees, "Configuration", "AllocatePerfFees");
             }
-            if (chkAnnualizeReturns.IsChecked.Value)
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 if (rd401.IsSelected || rd41.IsSelected)
                 {
@@ -321,7 +324,7 @@ namespace SSRSUtility
                     d.AddReportParameterDefault(Annualize, "Configuration", "AnnualizeReturns");
                 }
             }
-            if (chkBondCostBasis.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value || chkIncludePerformance.IsChecked.Value || chkRealizedGain.IsChecked.Value)
             {
                 d.CreateDataSet_BondCostBasis();
                 XmlElement BondCostBasis = d.CreateReportParameter("BondCostBasis", "Integer", "Bond Cost Basis");
@@ -330,23 +333,17 @@ namespace SSRSUtility
             }
             d.CreateDataSet_Configuration();
 
-            //if (chkCurrency.IsChecked.Value)
-            //{
-                d.CreateDataSet_Currencies();
-                XmlElement ReportingCurrencyCode = d.CreateReportParameter("ReportingCurrencyCode", "String", "Reporting Currency");
-                d.AddReportParameterDefault(ReportingCurrencyCode, "Configuration", "ReportingCurrencyCode");
-                d.AddReportParameterAvailableValues(ReportingCurrencyCode, "Currency", "CurrencyDisplayName", "CurrencyCode");
-            //}
+            d.CreateDataSet_Currencies();
+            XmlElement ReportingCurrencyCode = d.CreateReportParameter("ReportingCurrencyCode", "String", "Reporting Currency");
+            d.AddReportParameterDefault(ReportingCurrencyCode, "Configuration", "ReportingCurrencyCode");
+            d.AddReportParameterAvailableValues(ReportingCurrencyCode, "Currency", "CurrencyDisplayName", "CurrencyCode");
 
-            //if (chkCurrencyPrecision.IsChecked.Value)
-            //{
-                d.CreateDataSet_CurrencyPrecision();
-                XmlElement Precision = d.CreateReportParameter("ShowCurrencyFullPrecision", "Integer", "Currency Display");
-                d.AddReportParameterDefault(Precision, "Configuration", "ShowCurrencyFullPrecision");
-                d.AddReportParameterAvailableValues(Precision, "ShowCurrentFullPrecision", "Name", "Value");
-            //}
+            d.CreateDataSet_CurrencyPrecision();
+            XmlElement Precision = d.CreateReportParameter("ShowCurrencyFullPrecision", "Integer", "Currency Display");
+            d.AddReportParameterDefault(Precision, "Configuration", "ShowCurrencyFullPrecision");
+            d.AddReportParameterAvailableValues(Precision, "ShowCurrencyFullPrecision", "Name", "Value");
 
-            if (chkFeeMethod.IsChecked.Value)
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 d.CreateDataSet_FeeMethod();
                 XmlElement FeeMethod = d.CreateReportParameter("FeeMethod", "Integer", "Calculate Performance");
@@ -361,82 +358,72 @@ namespace SSRSUtility
             XmlElement FirmName = d.CreateReportParameter("FirmName", "String", true, true, true);
             d.AddReportParameterDefault(FirmName, "Configuration", "FirmName");
 
-            //if (chkIncludeStyle.IsChecked.Value)
-            //{
-            //    XmlElement StyleSetID = d.CreateReportParameter("StyleSetID", "Integer", true, false, false);
-            //    d.AddReportParameterDefault(StyleSetID, "Configuration", "StyleSetID");
-
-            //    d.CreateDataSet_StyleSheets();
-            //    XmlElement StyleSheet = d.CreateReportParameter("StyleSheet", "String");
-            //    d.AddReportParameterDefault(StyleSheet, "Default A");
-            //    d.AddReportParameterAvailableValues(StyleSheet, "StyleSheets", "DisplayName", "DisplayName");
-            //}
-            if (chkIndustryGroup.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_IndustryGroup();
                 XmlElement Industry = d.CreateReportParameter("ShowIndustryGroup", "Integer", "Industry Group");
                 d.AddReportParameterDefault(Industry, "Configuration", "ShowIndustryGroup");
                 d.AddReportParameterAvailableValues(Industry, "ShowIndustryGroup", "Name", "Value");
             }
-            if (chkIndustrySector.IsChecked.Value)
+            
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_IndustrySector();
                 XmlElement Sector = d.CreateReportParameter("ShowIndustrySector", "Integer", "Industry Sector");
                 d.AddReportParameterDefault(Sector, "Configuration", "ShowIndustrySector");
                 d.AddReportParameterAvailableValues(Sector, "ShowIndustrySector", "Name", "Value");
             }
-            //if (chkGroupMembers.IsChecked.Value)
-            //{
-            //    d.CreateDataSet_GroupMembersFlattened();
-            //}
 
             d.CreateDataSet_LocaleInfo();
             XmlElement LocaleID = d.CreateReportParameter("LocaleID", "Integer", "Locale");
             d.AddReportParameterDefault(LocaleID, "Configuration", "LocaleID");
             d.AddReportParameterAvailableValues(LocaleID, "LocaleInfo", "LocaleName", "LocaleID");
 
-            if (chkMBSFace.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_MBSFace();
                 XmlElement MBSFace = d.CreateReportParameter("ShowCurrentMBSFace", "Integer", "MBS Face");
                 d.AddReportParameterDefault(MBSFace, "Configuration", "ShowCurrentMBSFace");
                 d.AddReportParameterAvailableValues(MBSFace, "ShowCurrentMBSFace", "Name", "Value");
             }
-            if (chkMFBasisIncludeReinvest.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_MFBasisIncludeReinvest();
                 XmlElement MFBasis = d.CreateReportParameter("MFBasisIncludeReinvest", "Integer", "Mutual Fund Cost Basis");
                 d.AddReportParameterDefault(MFBasis, "Configuration", "MFBasisIncludeReinvest");
                 d.AddReportParameterAvailableValues(MFBasis, "MFBasisIncludeReinvest", "Name", "Value");
             }
-            if (chkClassification.IsChecked.Value)
+            
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 d.CreateDataSet_ReportingClassification();
                 XmlElement ReportClass = d.CreateReportParameter("ReportingClassification", "Integer", "Reporting Classification");
                 d.AddReportParameterAvailableValues(ReportClass, "ReportingClassification", "ClassificationName", "ClassificationID");
             }
-            if (chkPriceType.IsChecked.Value)
+
+            if (chkAppraisal.IsChecked.Value || chkRealizedGain.IsChecked.Value || chkIncludePerformance.IsChecked.Value || chkTrans.IsChecked.Value)
             {
                 d.CreateDataSet_PriceType();
                 XmlElement PriceType = d.CreateReportParameter("PriceTypeID", "Integer", "Price Set");
                 d.AddReportParameterDefault(PriceType, "Configuration", "PriceTypeID");
                 d.AddReportParameterAvailableValues(PriceType, "PriceType", "PriceTypeName", "PriceTypeID");
             }
-            if (chkTIPSFace.IsChecked.Value)
+
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_TIPSFace();
                 XmlElement TIPSFace = d.CreateReportParameter("ShowCurrentTIPSFace", "Integer", "TIPS Face");
                 d.AddReportParameterDefault(TIPSFace, "Configuration", "ShowCurrentTIPSFace");
                 d.AddReportParameterAvailableValues(TIPSFace, "ShowCurrentTIPSFace", "Name", "Value");
             }
-            if (chkShowSymbol.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_ShowSymbol();
                 XmlElement Symbol = d.CreateReportParameter("ShowSecuritySymbol", "String", "Security Symbol");
                 d.AddReportParameterDefault(Symbol, "Configuration", "ShowSecuritySymbol");
                 d.AddReportParameterAvailableValues(Symbol, "ShowSecuritySymbol", "Name", "Value");
             }
-            if (chkShowTaxLots.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_ShowTaxLots();
                 XmlElement TaxLots = d.CreateReportParameter("ShowTaxLotsLumped", "Integer", "Tax Lots");
@@ -451,51 +438,54 @@ namespace SSRSUtility
             XmlElement StyleSheet = d.CreateReportParameter("StyleSheetXML", "String", true, false, false);
             d.AddReportParameterDefault(StyleSheet, "StyleSheet", "StyleSheetXML");
 
-            if (chkUseACB.IsChecked.Value)
+            if (chkIncludePerformance.IsChecked.Value)
             {
                 d.CreateDataSet_UseACB();
                 XmlElement UseACB = d.CreateReportParameter("UseACB", "Integer", "IRR Calculation Method");
                 d.AddReportParameterDefault(UseACB, "Configuration", "UseACB");
                 d.AddReportParameterAvailableValues(UseACB, "UseACB", "Name", "Value");
             }
-            if (chkUseIRR.IsChecked.Value)
+
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 XmlElement UseIRR = d.CreateReportParameter("UseIRR", "Boolean", "Show IRR Calc");
                 d.AddReportParameterDefault(UseIRR, "False");
             }
-            if (chkUseSettlementDate.IsChecked.Value)
+
+            if (chkAppraisal.IsChecked.Value || chkRealizedGain.IsChecked.Value || chkTrans.IsChecked.Value)
             {
                 d.CreateDataSet_SettlementDate();
                 XmlElement UseSettlementDate = d.CreateReportParameter("UseSettlementDate", "Integer", "Settlement Date");
                 d.AddReportParameterDefault(UseSettlementDate, "Configuration", "UseSettlementDate");
                 d.AddReportParameterAvailableValues(UseSettlementDate, "UseSettlementDate", "Name", "Value");
             }
-            if (chkYieldOption.IsChecked.Value)
+            if (chkAppraisal.IsChecked.Value)
             {
                 d.CreateDataSet_Yield();
                 XmlElement Yield = d.CreateReportParameter("YieldOptionID", "Integer", "Yield");
                 d.AddReportParameterDefault(Yield, "Configuration", "YieldOptionID");
                 d.AddReportParameterAvailableValues(Yield, "Yield", "YieldOptionDesc", "YieldOptionID");
             }
-            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerformanceClassification.IsChecked.Value)
+
+            if (chkIncludePerformance.IsChecked.Value || chkPerfHistory.IsChecked.Value || chkPerfHistDetail.IsChecked.Value || chkPerfHistPeriod.IsChecked.Value)
             {
                 d.CreateDataSet_PerformanceClassifications();
                 XmlElement PerformanceClassificationID = d.CreateReportParameter("ClassificationID", "Integer", "Classification");
                 d.AddReportParameterDefault(PerformanceClassificationID, "-9");
                 d.AddReportParameterAvailableValues(PerformanceClassificationID, "PerformanceClassifications", "ClassificationName", "ClassificationID");
             }
-            if (chkIncludePerformance.IsChecked.Value)
-            {
-                d.CreateDataSet_Performance();
-            }
-            if (chkPerfHistory.IsChecked.Value)
-            {
-                d.CreateDataSet_PerformanceHistory();
-            }
-            if (chkAppraisal.IsChecked.Value)
-            {
-                d.CreateDataSet_Appraisal();
-            }
+            //if (chkIncludePerformance.IsChecked.Value)
+            //{
+            //    d.CreateDataSet_Performance();
+            //}
+            //if (chkPerfHistory.IsChecked.Value)
+            //{
+            //    d.CreateDataSet_PerformanceHistory();
+            //}
+            //if (chkAppraisal.IsChecked.Value)
+            //{
+            //    d.CreateDataSet_Appraisal();
+            //}
             //if (chkRealizedGain.IsChecked.Value)
             //{
             //    d.CreateDataSet_RealizedGainLoss();
@@ -517,7 +507,8 @@ namespace SSRSUtility
             //}
             try
             {
-                d.Save(txtRdlFolder.Text + @"\" + txtFileName.Text);
+                string fileName = txtFileName.Text + ".rdl";
+                d.Save(txtRdlFolder.Text + @"\" + fileName.Trim());
             }
             catch (Exception ex)
             {
